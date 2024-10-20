@@ -1,11 +1,16 @@
 package com.milena.screenmatch.model;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.zip.DataFormatException;
+
 public class Episodio {
 
     private String titulo;
     private Integer numeroEpisodio;
     private Double avaliacao;
     private Integer temporada;
+    private LocalDate dataLancamento;
 
     public Episodio(Integer temporada, DadosEpisodio dadosEpisodio) {
 
@@ -17,6 +22,12 @@ public class Episodio {
         this.avaliacao = Double.valueOf(dadosEpisodio.avaliacao());
     } catch (NumberFormatException e) {
         this.avaliacao = 0.0;;
+    }
+
+    try{
+        this.dataLancamento=LocalDate.parse(dadosEpisodio.dataLancamento());
+    } catch (DateTimeParseException e) {
+        this.dataLancamento=null;
     }
     }
 
@@ -52,11 +63,20 @@ public class Episodio {
         this.temporada = temporada;
     }
 
+    public LocalDate getDataLancamento() {
+        return dataLancamento;
+    }
+
+    public void setDataLancamento(LocalDate dataLancamento) {
+        this.dataLancamento = dataLancamento;
+    }
+
     @Override
     public String toString() {
         return  "titulo='" + titulo + '\'' +
                 ", numeroEpisodio=" + numeroEpisodio +
                 ", avaliacao=" + avaliacao +
-                ", temporada=" + temporada;
+                ", temporada=" + temporada +
+                " ano de lançamento =" + dataLancamento;
     }
 }
