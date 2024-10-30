@@ -1,16 +1,12 @@
 package com.milena.screenmatch.principal;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.milena.screenmatch.model.DadosEpisodio;
 import com.milena.screenmatch.model.DadosSerie;
 import com.milena.screenmatch.model.DadosTemporada;
-import com.milena.screenmatch.model.Episodio;
+import com.milena.screenmatch.model.Serie;
 import com.milena.screenmatch.service.ConsumoApi;
 import com.milena.screenmatch.service.ConverteDados;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,27 +18,88 @@ public class Principal {
     private final String API_KEY = "&apikey=8ffb465d";
     private ConverteDados conversor = new ConverteDados();
     private DadosSerie dadosSerie;
-    private List<DadosTemporada> addTemporadas = new ArrayList<>();
+
+    private List<DadosSerie> addDados = new ArrayList<>();
 
     public void ExibeMenu() throws JsonProcessingException {
 
-        System.out.println("Qual série que deseja pesquisar:");
-        String serieEscolhida = leitor.nextLine();
-        var json = consumo.obterDados(ENDERECO + serieEscolhida.replace(" ", "+") + API_KEY);
-        dadosSerie = conversor.obterDados(json, DadosSerie.class);
+        var opcao = -1;
 
+        while (opcao != 0) {
 
-        for (int i = 1; i <= dadosSerie.totalTemporadas(); i++) {
-            json = consumo.obterDados(ENDERECO + serieEscolhida.replace(" ", "+") + "&season=" + i + API_KEY);
-            DadosTemporada dadosTemporada = conversor.obterDados(json, DadosTemporada.class);
-            addTemporadas.add(dadosTemporada);
+            System.out.println("""
+                
+                1- Buscar séries
+                2- Buscar episódios
+                3- Listar séries buscadas
+                0- Sair
+                
+                """);
+            opcao = leitor.nextInt();
+            leitor.nextLine();
+
+            switch (opcao) {
+                case 1:
+                    buscarSerie();
+                    break;
+
+                case 2:
+                    getDadosTemporada();
+                    break;
+
+                case 3:
+                    listaSeries();
+                    break;
+
+                case 0:
+                    System.out.println("Saindo...");
+                    break;
+
+                default:
+                    System.out.println("Opção inválida");
+            }
+
         }
-        addTemporadas.forEach(System.out::println);
+    }
 
+        private void buscarSerie() throws JsonProcessingException {
+          DadosSerie dados = getDadosSerie();
+          addDados.add(dados);
+          System.out.println(dados);
+        }
 
-        addTemporadas.forEach(t -> t.listaEpisodios().forEach(e -> System.out.println(e.titulo())));
+        private void listaSeries(){
+        List<Serie> series = new ArrayList<>();
+        series = addDados.stream().map(d->new Serie(d)).collect(Collectors.toList());
+        series.stream()
+                        .sorted(Comparator.comparing(Serie::getGenero));
+        series.forEach(System.out::println);
+        }
 
-        List<DadosEpisodio> avaliacaoEpisodios = addTemporadas.stream()
+        private DadosSerie getDadosSerie() throws JsonProcessingException {
+            System.out.println("Qual série que deseja pesquisar:");
+            String serieEscolhida = leitor.nextLine();
+            var json = consumo.obterDados(ENDERECO + serieEscolhida.replace(" ", "+") + API_KEY);
+            dadosSerie = conversor.obterDados(json, DadosSerie.class);
+            return dadosSerie;
+        }
+
+        private void getDadosTemporada() throws JsonProcessingException {
+            DadosSerie dadosSerie = getDadosSerie();
+            List<DadosTemporada> addTemporadas = new ArrayList<>();
+            for (int i = 1; i <= dadosSerie.totalTemporadas(); i++) {
+                var json = consumo.obterDados(ENDERECO + dadosSerie.titulo().replace(" ", "+") + "&season=" + i + API_KEY);
+                DadosTemporada dadosTemporada = conversor.obterDados(json, DadosTemporada.class);
+                addTemporadas.add(dadosTemporada);
+            }
+            addTemporadas.forEach(System.out::println);
+        }
+
+        /*
+
+         addTemporadas.forEach(t -> t.listaEpisodios().forEach(e -> System.out.println(e.titulo())));
+
+         List<DadosEpisodio> avaliacaoEpisodios = addTemporadas.stream()
                 .flatMap(t -> t.listaEpisodios()
                         .stream())
                 .collect(Collectors.toList());
@@ -106,6 +163,7 @@ public class Principal {
         System.out.println("Pior Avaliação: " + est.getMin());
         System.out.println("Toal de episódios contabilizados: " + est.getCount());
 
+    }*/
     }
-}
+
 
